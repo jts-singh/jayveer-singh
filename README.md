@@ -1,2 +1,2 @@
 # jayveer-singh
-ompal Singh lubricants oil shop
+Ompal Singh lubricants oil shop
