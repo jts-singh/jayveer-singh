@@ -872,9 +872,7 @@ header, nav, main, footer {
   height: 100%;
   display: none;
   background-color: #fbf4d4; /* Optional: Add a background color */
- 
-       
-        overflow: auto; /* Enable scrolling */
+  overflow: auto; /* Enable scrolling */
     
 }
 
