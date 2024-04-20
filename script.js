@@ -6,11 +6,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const cartItems = document.getElementById('cart-items');
     const cartTotal = document.getElementById('cart-total');
     const clearCartButton = document.getElementById('clear-cart');
+    const orderItems = document.getElementById('orderItems'); // Add this line to access the order items table body
 
     let cartContents = [];
 
     const products = [
-        { id: 1, name: 'GARS Magic 20w-40-SM-Bike Engine oil', price: 300.99, image: 'https://www.garslubricants.com/Product/1584680922magic-SMjpg.jpg', offer: '10% off' },
+        { id: 1, name: 'GARS Magic 20w-40-SM-Bike Engine oil', price: 300.99, image: 'https://www.garslubricants.com/Product/1584680922magic-SMjpg.jpg', offer: '10% off', paragraph: 'content add here'  },
         { id: 2, name: 'GARS GELCO-Bike Engine Oil for Bike', price: 300.99, image: 'https://www.garslubricants.com/Product/1591941973gelco.jpg', offer: '15% off' },
         { id: 3, name: 'GARS GASOLINE 20W-50-SG', price: 300.99, image: 'https://www.garslubricants.com/Product/1591941952gasoline_ing.jpg', offer: '20% off' },
         { id: 4, name: 'GARS Gear Oil', price: 200.99, image: 'https://www.garslubricants.com/Product/1601352400ATF.jpg', offer: '10% off' },
@@ -26,33 +27,56 @@ document.addEventListener('DOMContentLoaded', function() {
         { id: 12, name: 'Nitco', price: 300.99, image: 'https://nitcopetrolube.com/wp-content/uploads/2023/04/Racing-Booster-1Ltr.png', offer: '20% off' },
         { id: 12, name: 'Nitco', price: 300.99, image: 'https://nitcopetrolube.com/wp-content/uploads/2023/10/CNG-2-1080X1080.png', offer: '20% off' },
         { id: 12, name: 'Nitco', price: 300.99, image: '', offer: '20% off' },
-        // Add more products as needed
+        // Add more products here
     ];
+
     // Display products
     products.forEach(product => {
-        const productElement = document.createElement('div');
-        productElement.classList.add('product');
-        productElement.innerHTML = `
-            <img src="${product.image}" alt="${product.name}">
-            <div class="product-details">
-                <h3>${product.name}</h3>
-                <p>Price: $${product.price}</p>
-                <p>Offer: ${product.offer}</p>
-                <button class="buy-btn" data-id="${product.id}">Add to Cart</button>
-            </div>
-        `;
-
-        productElement.querySelector('.buy-btn').addEventListener('click', function() {
-            addToCart(product);
-        });
-
+        const productElement = createProductElement(product);
         productsContainer.appendChild(productElement);
     });
 
+    // Create product element
+    function createProductElement(product) {
+        const productElement = document.createElement('div');
+        productElement.classList.add('product');
+        productElement.innerHTML = `
+        <img src="${product.image}" alt="${product.name}">
+        <div class="product-details">
+            <h3>${product.name}</h3>
+            <p>Price: $${product.price}</p>
+            <p>Offer: ${product.offer}</p>
+            <p>${product.paragraph}</p> <!-- Include the paragraph here -->
+            <select class="quantity-dropdown">
+                <!-- Options will be added dynamically -->
+            </select>
+            <button class="buy-btn" data-id="${product.id}">Add to Cart</button>
+        </div>
+        `;
+
+        // Dynamically generate options for quantity dropdown
+        const quantityDropdown = productElement.querySelector('.quantity-dropdown');
+        for (let i = 1; i <= 10; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = i;
+            quantityDropdown.appendChild(option);
+        }
+
+        productElement.querySelector('.buy-btn').addEventListener('click', function() {
+            const selectedQuantity = parseInt(productElement.querySelector('.quantity-dropdown').value);
+            addToCart(product, selectedQuantity);
+        });
+
+        return productElement;
+    }
+
     // Add to cart function
-    function addToCart(product) {
-        cartContents.push(product);
+    function addToCart(product, quantity) {
+        const cartItem = { ...product, quantity };
+        cartContents.push(cartItem);
         renderCart();
+        updateOrderItems(); // Update the user orders table
     }
 
     // Render cart function
@@ -61,13 +85,31 @@ document.addEventListener('DOMContentLoaded', function() {
         let total = 0;
         cartContents.forEach(item => {
             const li = document.createElement('li');
-            li.innerHTML = `${item.name} - $${item.price} <span class="remove-item" data-id="${item.id}">Remove</span>`;
+            const itemTotal = item.price * item.quantity;
+            total += itemTotal;
+            li.innerHTML = `${item.name} - Quantity: ${item.quantity} - Total: $${itemTotal.toFixed(2)} <span class="remove-item" data-id="${item.id}">Remove</span>`;
             cartItems.appendChild(li);
-            total += item.price;
         });
         cartTotal.textContent = total.toFixed(2);
         showCart();
         addRemoveItemListeners();
+    }
+
+    // Update the user orders table
+    function updateOrderItems() {
+        orderItems.innerHTML = '';
+        cartContents.forEach(item => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><img src="${item.image}" alt="${item.name}" class="product-img"></td>
+                <td>${item.name}</td>
+                <td>$${item.price}</td>
+                <td>${item.quantity}</td>
+                <td>$${(item.price * item.quantity).toFixed(2)}</td>
+                <td><button class="remove-item" data-id="${item.id}">Remove</button></td>
+            `;
+            orderItems.appendChild(row);
+        });
     }
 
     // Show cart function
@@ -95,15 +137,18 @@ document.addEventListener('DOMContentLoaded', function() {
     function removeItem(itemId) {
         cartContents = cartContents.filter(item => item.id !== itemId);
         renderCart();
+        updateOrderItems(); // Update the user orders table
     }
 
     // Event listeners
     cartLink.addEventListener('click', function() {
         renderCart();
     });
+    
 
-   
 });
+
+
 
 
 
@@ -325,3 +370,48 @@ document.querySelector("#address-and-order-form").addEventListener("submit", fun
     // Here you can save the address and order confirmation data if needed
     showPaymentPage(); // Show the Payment Page after form submission
 });
+
+
+
+
+
+
+
+
+
+
+    // Dynamically generate options for quantity dropdown 
+    var quantityDropdown = document.querySelector('.quantity-dropdown');
+    for (var i = 1; i <= 20; i++) {
+        var option = document.createElement('option');
+        option.value = i;
+        option.textContent = i;
+        quantityDropdown.appendChild(option);
+    }
+
+    function addToCart(productName, price) {
+        var orderItems = document.getElementById("orderItems");
+        var selectedQuantity = parseInt(document.querySelector('.quantity-dropdown').value);
+        var total = price * selectedQuantity;
+        
+        var newRow = orderItems.insertRow();
+        newRow.innerHTML = `
+            <td><img src="${productName.toLowerCase().replace(' ', '')}.jpg" alt="${productName}" class="product-img"></td>
+            <td>${productName}</td>
+            <td>$${price}</td>
+            <td>${selectedQuantity}</td>
+            <td class="${productName.replace(' ', '')}-total">$${total}</td>
+            <td><span class="remove-btn" onclick="removeFromCart(this)">Remove</span></td>
+        `;
+    }
+    function removeFromCart(btn) {
+        var row = btn.closest('tr');
+        row.parentNode.removeChild(row);
+    }
+    
+
+
+
+
+
+    
